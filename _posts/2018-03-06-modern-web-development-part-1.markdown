@@ -66,3 +66,126 @@ npm install webpack webpack-cli --save-dev
   นั้นสามารถกำหนดแบบคร่าว ๆ ได้ กล่าวคื่อไม่จำเป็นต้องกำหนดแบบเจาะจงว่าต้องเป็น Version นั้นเท่านั้น เช่น `^4.1.0` หมายถึง Version ไหนก็ได้ที่ไม่น้อยกว่า `4.1.0` และไม่ใช่ `5.X.X` หรือมากกว่า
   หากเราใช้ Version control เราควรจะ Commit ไฟล์นี้ขึ้นไปด้วยเพื่อให้ทุกคนในทีมใช้ Modules ที่เป็น Version เดียวกันทั้งหมด
 - มีแฟ้ม `node_modules` เพิ่มขึ้นมา ซึ่งแฟ้มนี้จะเก็บ Dependencies ทั้งหมดของ Project
+
+# ทดลองรัน Webpack
+ให้สร้างไฟล์ JavaScript ง่าย ๆ ขึ้นมาหนึ่งไฟล์ เช่น
+
+{% highlight js %}
+window.alert('Hello, world!');
+{% endhighlight %}
+
+เสร็จแล้วรัน `./node_modules/.bin/webpack INPUT --output OUTPUT` ตัวอย่าง
+
+{% highlight sh %}
+./node_modules/.bin/webpack assets/src/app.js --output wwwroot/assets/js/app.js
+{% endhighlight %}
+
+หากไม่มี Error อะไร ไฟล์ `INPUT` จะถูก Minified ออกไปที่ `OUTPUT` (ยังไม่มีการ Transpile ซึ่งจะอยู่ในหัวข้อถัดไป) หากเราเปิดดูไฟล์ `OUTPUT` จะพบว่ามี Code บางส่วนเพิ่มเข้ามา ซึ่งเป็น Code ที่ Webpack
+เอาไว้รองรับ Feature ของตัวมันเอง ซึ่งตอนนี้เรายังไม่ได้ใช้ เราสามารถเรียกใช้ไฟล์ `OUTPUT` ในไฟล์ HTML ได้ทันที แต่ Browser ต้องรองรับ Code ที่เราเขียนด้วย เพราะยังไม่มีการ Transpile เกิดขึ้น
+
+# ทดลอง Transpile Class ของ ES6 ให้ออกมาเป็น Code ที่ IE 11 ใช้งานได้
+ตัว Webpack นั้นไม่สามารถ Transpile Code ได้ด้วยตัวมันเอง เราต้องใช้ Feature หนึ่งของ Webpack ที่ชื่อว่า Loaders ซึ่ง Loader แต่ละตัวนั้นเราต้องติดตั้งเพิ่ม Loader ที่เราจะใช้ในการ Transpile JavaScript
+Version ใหม่ ๆ ให้ออกมาเป็น Version ที่ IE 11 ใช้งานได้คือ [babel-loader](https://webpack.js.org/loaders/babel-loader/) ซึ่งตัวมันเป็นแค่ Wrapper เพื่อเรียกใช้งาน [Babel](https://babeljs.io/)
+อีกต่อหนึ่ง
+
+วิธีการติดตั้ง `babel-loader` ให้รัน
+
+{% highlight sh %}
+npm install babel-loader babel-core babel-preset-env --save-dev
+{% endhighlight %}
+
+เสร็จแล้ว เราต้องสร้าง [config](https://webpack.js.org/configuration/) เพื่อบอก Webpack ว่าให้ประมวลผลไฟล์ JavaScript ด้วย `babel-loader`
+
+การสร้าง config ของ Webpack เพื่อใช้ `babel-loader` ให้เราสร้างไฟล์ JavaScript ขึ้นมา แล้วใส่ Code ข้างล่างลงไป
+
+{% highlight js %}
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /(node_modules|bower_components)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['babel-preset-env']
+          }
+        }
+      }
+    ]
+  }
+}
+{% endhighlight %}
+
+ซึ่งไฟล์ JavaScript ตัวนี้จะถูกรันใน Node.js นั่นหมายความว่า เราสามารถเรียกใช้ Features ต่าง ๆ ของ Node.js ได้
+
+เสร็จแล้วเราต้องสร้าง config ของ Babel เพื่อบอกว่าเราต้องการ Code ที่ใช้งานกับ Browser ไหนได้บ้าง ให้สร้างไฟล์ `.babelrc` ไว้ที่ Root ของ Project แล้วใส่ JSON ข้างล่างลงไป
+
+{% highlight json %}
+{
+  "presets": [
+    ["env", {
+      "targets": {
+        "browsers": ["last 2 versions", "not ie <= 10"]
+      }
+    }]
+  ]
+}
+{% endhighlight %}
+
+`last 2 versions` หมายถึง Browser ทุกตัวย้อนไป 2 Versions ส่วน `not ie <= 10` หมายถึง ตัด IE ตั้งแต่ Version 10 ลงมาออกไป รายละเอียด Syntax สามารถดูได้จาก [ที่นี่](https://github.com/ai/browserslist)
+
+จากนั้น ให้แก้ใขไฟล์ JavaScript ที่เราลองเมื่อกี้ให้เป็น Code นี้แทน
+
+{% highlight js %}
+class Foo {
+  constructor(msg) {
+    this.msg = msg
+  }
+
+  alert() {
+    window.alert(this.msg)
+  }
+}
+
+let foo = new Foo('Hello, world!')
+foo.alert()
+{% endhighlight %}
+
+เสร็จแล้ว รัน Webpack ด้วย config ที่เราสร้างเมื่อกี้
+
+{% highlight sh %}
+./node_modules/.bin/webpack assets/src/app.js --config assets/webpack.base.conf.js --output wwwroot/assets/js/app.js
+{% endhighlight %}
+
+เมื่อเราเปิดดู Output จะพบว่า Class ที่เราเขียนถูกแปลงเป็น Code อีกรูปแบบหนึ่งที่สามรถใช้งานใน Browser ที่เรากำหนดใน `.babelrc`
+
+# ย่นเวลาการพิมพ์คำสั่งเพื่อรัน Webpack
+เราสามารถตั้งค่าให้ `npm` รันคำสั่งที่เรากำหนดได้เมื่อเรารัน `npm run xyz` ซึ่ง `xyz` ได้ คือชื่อคำสั่งที่เรากำหนดใน `package.json`
+
+ตัวอย่างการรันคำสั่ง Webpack ข้างบนเมื่อเรารัน `npm run build`
+
+{% highlight json %}
+{
+  "name": "modern-web-development",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "webpack assets/src/app.js --config assets/webpack.base.conf.js --output wwwroot/assets/js/app.js"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.4",
+    "babel-preset-env": "^1.6.1",
+    "webpack": "^4.1.0",
+    "webpack-cli": "^2.0.10"
+  }
+}
+{% endhighlight %}
+
+สังเกตว่าคำสั่ง `webpack` ไม่ต้องใช้ `./node_modules/.bin/webpack` แล้ว เนื่องจาก `npm` จะเพิ่มพาธ `node_modules/.bin` เข้าไปใน Environment ให้เราอัตโนมัติ
+
+# บทส่งท้าย
+จากบทความนี้จะเห็นว่าเราสามารถใช้ Webpack และ Babel เพื่อช่วยให้เราสามารถใช้งาน Version ใหม่ ๆ ของ JavaScript ได้ ซึ่งช่วยเพิ่ม Productivity รวมถึงทำให้ดูแล Code ได้ง่ายขึ้นด้วย เนื่องจาก Version ใหม่ ๆ
+มักจะมี Feature ที่ทำให้เราสามารถแยก Code ออกเป็นส่วน ๆ ได้ดีขึ้น และมี Syntax ที่ทำให้เขียน Code ได้สั้นลง Feature ของ Webpack ที่เราใช้ในบทความนี้เป็นเพียงส่วนน้อยเท่านั้น ซึ่งถ้าใช้งาน Features อื่น ๆ เพิ่มเติม
+จะทำให้การพัฒนา Front-end ของเว็บไซต์เป็นระบบและง่ายขึ้นมาก ซึ่งจะช่วยให้เราสามารถสร้างเว็บไซต์ที่มีความซับซ้อนสูงได้
