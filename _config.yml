@@ -22,6 +22,8 @@ url: "https://ultimaweapon.github.io"
 github_username: ultimaweapon
 facebook_username: UltimaBlog
 google_analytics: UA-115390074-1
+disqus:
+  shortname: ultimaweapon
 
 # Build settings
 markdown: kramdown
