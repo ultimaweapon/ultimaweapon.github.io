@@ -163,7 +163,7 @@ foo.alert()
 # ย่นเวลาการพิมพ์คำสั่งเพื่อรัน Webpack
 เราสามารถตั้งค่าให้ `npm` รันคำสั่งที่เรากำหนดได้เมื่อเรารัน `npm run xyz` ซึ่ง `xyz` ได้ คือชื่อคำสั่งที่เรากำหนดใน `package.json`
 
-ตัวอย่างการรันคำสั่ง Webpack ข้างบนเมื่อเรารัน `npm run build`
+ตัวอย่างการรันคำสั่ง Webpack ข้างบนเมื่อเรารัน `npm run webpack`
 
 {% highlight json %}
 {
@@ -171,7 +171,7 @@ foo.alert()
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "webpack assets/src/app.js --config assets/webpack.base.conf.js --output wwwroot/assets/js/app.js"
+    "webpack": "webpack assets/src/app.js --config assets/webpack.base.conf.js --output wwwroot/assets/js/app.js"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
