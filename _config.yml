@@ -16,11 +16,10 @@
 title: Ultima Blog
 email: ultimaweapon@outlook.com
 description: >- # this means to ignore newlines until "baseurl:"
-  IT blogs for practicing my English
+  IT blogs for practice my English
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://ultimaweapon.github.io"
 github_username: ultimaweapon
-google_analytics: UA-115390074-1
 disqus:
   shortname: ultimaweapon
 
